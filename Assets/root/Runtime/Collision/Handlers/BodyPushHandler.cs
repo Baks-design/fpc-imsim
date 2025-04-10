@@ -5,12 +5,13 @@ namespace Assets.root.Runtime.Movement.Handlers
 {
 	public class BodyPushHandler : IBodyPushHandler
 	{
-		readonly BodyPushSettings bodyPushSettings;
+		readonly CollisionBodyPushSettings bodyPushSettings;
 		static readonly Vector3 HorizontalMask = new(1f, 0f, 1f);
 		const float VerticalPushThreshold = -0.3f;
 
-        public BodyPushHandler(BodyPushSettings bodyPushSettings)
-		=> this.bodyPushSettings = bodyPushSettings ?? throw new ArgumentNullException(nameof(bodyPushSettings));
+        public BodyPushHandler(CollisionBodyPushSettings bodyPushSettings)
+		=> this.bodyPushSettings = bodyPushSettings != null ? bodyPushSettings :
+			throw new ArgumentNullException(nameof(bodyPushSettings));
 
         public void PushRigidBodiesHandler(ControllerColliderHit hit)
 		{

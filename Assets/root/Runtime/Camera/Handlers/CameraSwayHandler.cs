@@ -1,9 +1,9 @@
 using System;
-using Assets.root.Runtime.Look.Interfaces;
-using Assets.root.Runtime.Look.Settings;
+using Assets.root.Runtime.Cam.Interfaces;
+using Assets.root.Runtime.Cam.Settings;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Look.Handlers
+namespace Assets.root.Runtime.Cam.Handlers
 {
     public class CameraSwayHandler : ICameraSway
     {
@@ -17,10 +17,10 @@ namespace Assets.root.Runtime.Look.Handlers
         public CameraSwayHandler(Transform camTransform, CameraSwaySettings swaySettings)
         {
             this.camTransform = camTransform != null ? camTransform : throw new ArgumentNullException(nameof(camTransform));
-            this.swaySettings = swaySettings ?? throw new ArgumentNullException(nameof(swaySettings));
+            this.swaySettings = swaySettings != null ? swaySettings : throw new ArgumentNullException(nameof(swaySettings));
         }
 
-        public void Sway(Vector3 inputVector, float rawXInput)
+        public void Sway(Vector3 inputVector, float rawXInput) //FIXME
         {
             xAmountThisFrame = rawXInput;
 

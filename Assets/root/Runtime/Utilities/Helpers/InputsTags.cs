@@ -2,11 +2,11 @@ namespace Assets.root.Runtime.Input.Handlers
 {
     public static class InputsTags
     {
-        public static string LookId = "Look";
-        public static string ZoomId = "Zoom";
-        public static string MoveId = "Move";
-        public static string RunId = "Run";
-        public static string CrouchId = "Crouch";
-        public static string JumpId = "Jump";
+        public const string Look = "Look";
+        public const string Zoom = "Zoom";
+        public const string Move = "Move";
+        public const string Run = "Run";
+        public const string Crouch = "Crouch";
+        public const string Jump = "Jump";
     }
 }

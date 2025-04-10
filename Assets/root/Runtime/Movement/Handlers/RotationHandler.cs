@@ -8,21 +8,19 @@ namespace Assets.root.Runtime.Movement.Handlers
     public class RotationHandler : IRotationHandler
     {
         readonly Transform player;
-        readonly SmoothSettings settings;
+        readonly MovementSmoothSettings settings;
+        readonly Transform cameraT;
 
-        public RotationHandler(Transform player, SmoothSettings settings)
+        public RotationHandler(Transform player, MovementSmoothSettings settings, Transform cameraT)
         {
             this.player = player != null ? player : throw new ArgumentNullException(nameof(player));
-            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+            this.cameraT = cameraT != null ? cameraT : throw new ArgumentNullException(nameof(cameraT));
         }
 
-        public void HandleRotation(Transform camera)
-        {
-            var currentRot = Quaternion.Euler(0f, player.rotation.y, 0f);
-            var desiredRot = Quaternion.Euler(0f, camera.rotation.y, 0f);
-            player.rotation = Quaternion.Slerp(currentRot, desiredRot, Time.deltaTime * settings.smoothRotateSpeed);
-        }
+        public void HandleRotation()
+        => player.rotation = Quaternion.Slerp(player.rotation, cameraT.rotation, Time.deltaTime * settings.smoothRotateSpeed);
 
-        public void ResetRotation(Transform camera) => camera.localEulerAngles = Vector3.zero;
+        public void ResetRotation() => cameraT.localEulerAngles = Vector3.zero;
     }
 }

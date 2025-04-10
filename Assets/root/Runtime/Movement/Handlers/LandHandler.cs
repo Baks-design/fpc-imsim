@@ -10,19 +10,21 @@ namespace Assets.root.Runtime.Movement.Handlers
     public class LandHandler : ILandHandler
     {
         readonly IGravityHandler gravityHandler;
-        readonly LandingSettings settings;
+        readonly MovementLandingSettings settings;
+        readonly Transform yawTransform;
         CancellationTokenSource landTokenSource;
 
         public bool IsLanding { get; private set; }
         public float LastLandImpact { get; private set; }
 
-        public LandHandler(IGravityHandler gravityHandler, LandingSettings settings)
+        public LandHandler(IGravityHandler gravityHandler, MovementLandingSettings settings, Transform yawTransform)
         {
             this.gravityHandler = gravityHandler ?? throw new ArgumentNullException(nameof(gravityHandler));
-            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+            this.yawTransform = yawTransform != null ? yawTransform : throw new ArgumentNullException(nameof(yawTransform));
         }
 
-        public async void HandleLanding(IGroundChecker groundChecker, Transform yawTransform)
+        public async void HandleLanding(IGroundChecker groundChecker) //FIXME
         {
             if (!ShouldTriggerLanding(groundChecker)) return;
 
@@ -30,7 +32,7 @@ namespace Assets.root.Runtime.Movement.Handlers
             landTokenSource?.Cancel();
             landTokenSource?.Dispose();
 
-            await LandingAnimationAsync(yawTransform);
+            await LandingAnimationAsync();
         }
 
         bool ShouldTriggerLanding(IGroundChecker groundChecker)
@@ -38,7 +40,7 @@ namespace Assets.root.Runtime.Movement.Handlers
             groundChecker.IsGrounded &&
             gravityHandler.InAirTimer > settings.minAirTime;
 
-        async Awaitable LandingAnimationAsync(Transform yawTransform)
+        async Awaitable LandingAnimationAsync()
         {
             landTokenSource = new CancellationTokenSource();
             var token = landTokenSource.Token;

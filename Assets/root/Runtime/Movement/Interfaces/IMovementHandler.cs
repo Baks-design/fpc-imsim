@@ -10,7 +10,7 @@ namespace Assets.root.Runtime.Movement.Interfaces
         float CurrentSpeed { get; }
         public MovementState CurrentState { get; }
 
-        void HandleMovement(Transform transform, PlayerInputController input);
+        void HandleMovement(PlayerController input);
         void ResetMovement();
     }
 }

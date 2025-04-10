@@ -1,11 +1,10 @@
-using Assets.root.Runtime.Input.Interfaces;
 using Assets.root.Runtime.Movement.Interfaces;
 using UnityEngine;
 using Assets.root.RunMovement.Handlers;
-using Assets.root.Runtime.Look.Settings;
+using Assets.root.Runtime.Cam.Settings;
 using System;
-using Assets.root.Runtime.Look.Interfaces;
-using Assets.root.Runtime.Look;
+using Assets.root.Runtime.Cam.Interfaces;
+using Assets.root.Runtime.Cam;
 
 namespace Assets.root.Runtime.Movement.Handlers
 {
@@ -19,8 +18,7 @@ namespace Assets.root.Runtime.Movement.Handlers
             NoInput
         }
 
-        readonly PlayerLookController lookController;
-        readonly IMovementInput input;
+        readonly PlayerCameraController lookController;
         readonly ICameraFOV cameraFovHandler;
         readonly ICameraSway cameraSwayHandler;
         readonly CameraSwaySettings swaySettings;
@@ -29,38 +27,33 @@ namespace Assets.root.Runtime.Movement.Handlers
         float currentSwayIntensity;
         float swayVelocity;
 
-        public CameraEffectsHandler(
-            PlayerLookController lookController,
-            IMovementInput input,
-            CameraSwaySettings swaySettings)
+        public CameraEffectsHandler(PlayerCameraController lookController, CameraSwaySettings swaySettings)
         {
             this.lookController = lookController != null ? lookController : throw new ArgumentNullException(nameof(lookController));
-            this.input = input ?? throw new ArgumentNullException(nameof(input));
-            this.swaySettings = swaySettings ?? throw new ArgumentNullException(nameof(swaySettings));
+            this.swaySettings = swaySettings != null ? swaySettings : throw new ArgumentNullException(nameof(swaySettings));
         }
 
-        public void UpdateCameraEffects(IWallChecker wallChecker, IMovementHandler movementHandler)
+        public void UpdateCameraEffects(
+            IWallChecker wallChecker, IMovementHandler movementHandler, PlayerController controller) //FIXME
         {
-            UpdateCameraState(wallChecker, movementHandler);
+            UpdateCameraState(wallChecker, movementHandler, controller);
             HandleCameraSway(movementHandler);
-            HandleRunFOV();
+            HandleRunFOV(controller);
         }
 
-        void UpdateCameraState(IWallChecker wallChecker, IMovementHandler movementHandler)
+        void UpdateCameraState(IWallChecker wallChecker, IMovementHandler movementHandler, PlayerController controller)
         {
             if (wallChecker.IsHitWall)
             {
                 currentCameraState = CameraState.WallHit;
                 return;
             }
-
-            if (!input.HasInput)
+            if (!controller.MovementInput.HasInput)
             {
                 currentCameraState = CameraState.NoInput;
                 return;
             }
-
-            if ((input.RunIsPressed() || input.RunWasPressed()) &&
+            if ((controller.MovementInput.RunIsPressed() || controller.MovementInput.RunWasPressed()) &&
                 movementHandler.CurrentState == MovementHandler.MovementState.Running)
             {
                 currentCameraState = CameraState.Running;
@@ -87,21 +80,22 @@ namespace Assets.root.Runtime.Movement.Handlers
 
         float CalculateTargetSwayIntensity()
         {
-            if (currentCameraState == CameraState.Running)
+            if (currentCameraState is CameraState.Running)
                 return swaySettings.runSwayIntensity;
 
-            if (currentCameraState == CameraState.WallHit)
+            if (currentCameraState is CameraState.WallHit)
                 return 0f;
 
             return swaySettings.defaultSwayIntensity;
         }
 
-        void HandleRunFOV()
+        void HandleRunFOV(PlayerController controller)
         {
-            var shouldStartRunFOV = (input.RunWasPressed() || input.RunIsPressed())
-                && !isDuringRunAnimation && currentCameraState == CameraState.Running;
+            var shouldStartRunFOV = (controller.MovementInput.RunWasPressed() || controller.MovementInput.RunIsPressed())
+                && !isDuringRunAnimation && currentCameraState is CameraState.Running;
 
-            var shouldResetRunFOV = input.RunWasReleased() || !input.HasInput || currentCameraState == CameraState.WallHit;
+            var shouldResetRunFOV = controller.MovementInput.RunWasReleased() ||
+                !controller.MovementInput.HasInput || currentCameraState is CameraState.WallHit;
 
             if (shouldStartRunFOV)
             {

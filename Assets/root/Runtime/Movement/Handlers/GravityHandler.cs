@@ -7,19 +7,19 @@ namespace Assets.root.Runtime.Movement.Handlers
 {
     public class GravityHandler : IGravityHandler
     {
-        readonly GravitySettings gravitySettings;
+        readonly MovementGravitySettings gravitySettings;
         Vector3 finalMoveVector;
 
         public Vector3 Gravity { get; private set; }
         public float InAirTimer { get; private set; }
 
-        public GravityHandler(GravitySettings gravitySettings)
-        => this.gravitySettings = gravitySettings ?? throw new ArgumentNullException(nameof(gravitySettings));
+        public GravityHandler(MovementGravitySettings gravitySettings)
+        => this.gravitySettings = gravitySettings != null ? gravitySettings : throw new ArgumentNullException(nameof(gravitySettings));
 
         public void UpdateInAirTimer(IGroundChecker groundChecker)
         => InAirTimer = groundChecker.IsGrounded ? 0f : InAirTimer + Time.deltaTime;
 
-        public void ApplyGravity(IGroundChecker groundChecker)
+        public void ApplyGravity(IGroundChecker groundChecker) //FIXME
         {
             if (!groundChecker.IsGrounded)
             {

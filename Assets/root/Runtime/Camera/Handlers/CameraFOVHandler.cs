@@ -1,11 +1,12 @@
 using System;
 using System.Threading;
-using Assets.root.Runtime.Look.Interfaces;
-using Assets.root.Runtime.Look.Settings;
+using Assets.root.Runtime.Cam.Interfaces;
+using Assets.root.Runtime.Cam.Settings;
+using Assets.root.Runtime.Movement;
 using Unity.Cinemachine;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Look.Handlers
+namespace Assets.root.Runtime.Cam.Handlers
 {
     [Serializable]
     public class CameraFOVHandler : ICameraFOV
@@ -21,21 +22,24 @@ namespace Assets.root.Runtime.Look.Handlers
 
         public CameraFOVHandler(CinemachineCamera camera, CameraFOVSettings fOVSettings)
         {
-            this.fOVSettings = fOVSettings ?? throw new ArgumentNullException(nameof(fOVSettings));
+            this.fOVSettings = fOVSettings != null ? fOVSettings : throw new ArgumentNullException(nameof(fOVSettings));
             var cam = camera != null ? camera : throw new ArgumentNullException(nameof(camera));
             initFOV = cam.Lens.FieldOfView;
             CurrentFOV = initFOV;
         }
 
-        public async void ToggleZoom()
+        public async void ToggleZoom(PlayerController input) //FIXME
         {
-            if (isRunning) return;
+            if (input.CameraInput.ZoomIsPressed() || input.CameraInput.ZoomWasReleased())
+            {
+                if (isRunning) return;
 
-            CancelActiveOperations();
-            await ChangeFOVAsync();
+                CancelActiveOperations();
+                await ChangeFOVAsync();
+            }
         }
 
-        public async void ToggleRunFOV(bool returning)
+        public async void ToggleRunFOV(bool returning) //FIXME
         {
             CancelActiveOperations();
             await ChangeRunFOVAsync(returning);
@@ -47,7 +51,7 @@ namespace Assets.root.Runtime.Look.Handlers
             activeRunToken?.Cancel();
         }
 
-        async Awaitable ChangeFOVAsync()
+        async Awaitable ChangeFOVAsync() 
         {
             isZooming = !isZooming;
             activeZoomToken = new CancellationTokenSource();

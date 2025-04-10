@@ -1,4 +1,3 @@
-using Name;
 using UnityEngine;
 
 namespace Assets.root.Runtime.Movement.Interfaces
@@ -7,7 +6,7 @@ namespace Assets.root.Runtime.Movement.Interfaces
     {
         Vector3 JumpVelocity { get; }
 
-        void UpdateJump(IGroundChecker groundChecker, PlayerInputController input);
+        void UpdateJump(IGroundChecker groundChecker, PlayerController input);
         void HandleJump(IGroundChecker groundChecker);
         void ResetJump();
     }

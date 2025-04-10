@@ -1,7 +1,9 @@
-namespace Assets.root.Runtime.Look.Interfaces
+using Assets.root.Runtime.Movement;
+
+namespace Assets.root.Runtime.Cam.Interfaces
 {
     public interface ICameraRotation
     {
-        void HandleRotation();
+        void HandleRotation(PlayerController input);
     }
 }

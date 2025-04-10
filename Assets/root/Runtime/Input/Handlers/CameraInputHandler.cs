@@ -11,8 +11,8 @@ namespace Assets.root.Runtime.Input.Handlers
     
         public CameraInputHandler()
         {
-            lookAction = InputSystem.actions.FindAction(InputsTags.LookId);
-            zoomAction = InputSystem.actions.FindAction(InputsTags.ZoomId);
+            lookAction = InputSystem.actions.FindAction(InputsTags.Look);
+            zoomAction = InputSystem.actions.FindAction(InputsTags.Zoom);
         }
 
         public Vector2 Look() => lookAction.ReadValue<Vector2>();

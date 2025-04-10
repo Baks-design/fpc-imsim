@@ -1,10 +1,9 @@
-using System;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Look.Settings
+namespace Assets.root.Runtime.Cam.Settings
 {
-    [Serializable]
-    public class CameraSwaySettings
+    [CreateAssetMenu(menuName = "Settings/Camera/Sway")]
+    public class CameraSwaySettings : ScriptableObject
     {
         public float swayAmount = 1f;
         public float swaySpeed = 1f;

@@ -15,10 +15,10 @@ namespace Assets.root.Runtime.Input.Handlers
 
         public MovementInputHandler()
         {
-            moveAction = InputSystem.actions.FindAction(InputsTags.MoveId);
-            runAction = InputSystem.actions.FindAction(InputsTags.RunId);
-            crouchAction = InputSystem.actions.FindAction(InputsTags.CrouchId);
-            jumpAction = InputSystem.actions.FindAction(InputsTags.JumpId);
+            moveAction = InputSystem.actions.FindAction(InputsTags.Move);
+            runAction = InputSystem.actions.FindAction(InputsTags.Run);
+            crouchAction = InputSystem.actions.FindAction(InputsTags.Crouch);
+            jumpAction = InputSystem.actions.FindAction(InputsTags.Jump);
         }
 
         public Vector2 Move() => moveAction.ReadValue<Vector2>();

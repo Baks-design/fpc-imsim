@@ -1,4 +1,5 @@
 using System;
+using Assets.root.Runtime.Movement;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
 using Name;
@@ -18,11 +19,11 @@ namespace Assets.root.RunMovement.Handlers
             Strafing
         }
 
-        readonly MovementSettings walkSettings;
-        readonly CrouchSettings crouchSettings;
-        readonly RunSettings runSettings;
+        readonly MovementWalkSettings walkSettings;
+        readonly MovementCrouchSettings crouchSettings;
+        readonly MovementRunSettings runSettings;
         readonly IGravityHandler gravityHandler;
-        readonly SmoothSettings smoothSettings;
+        readonly MovementSmoothSettings smoothSettings;
         readonly ICrouchHandler crouchHandler;
         readonly CharacterController character;
         readonly float walkRunSpeedDifference;
@@ -38,19 +39,19 @@ namespace Assets.root.RunMovement.Handlers
         public MovementState CurrentState => currentState;
 
         public MovementHandler(
-            MovementSettings walkSettings,
-            CrouchSettings crouchSettings,
-            RunSettings runSettings,
+            MovementWalkSettings walkSettings,
+            MovementCrouchSettings crouchSettings,
+            MovementRunSettings runSettings,
             IGravityHandler gravityHandler,
-            SmoothSettings smoothSettings,
+            MovementSmoothSettings smoothSettings,
             ICrouchHandler crouchHandler,
             CharacterController character)
         {
-            this.walkSettings = walkSettings ?? throw new ArgumentNullException(nameof(walkSettings));
-            this.runSettings = runSettings ?? throw new ArgumentNullException(nameof(runSettings));
-            this.crouchSettings = crouchSettings ?? throw new ArgumentNullException(nameof(crouchSettings));
+            this.walkSettings = walkSettings != null ? walkSettings : throw new ArgumentNullException(nameof(walkSettings));
+            this.runSettings = runSettings != null ? runSettings : throw new ArgumentNullException(nameof(runSettings));
+            this.crouchSettings = crouchSettings != null ? crouchSettings : throw new ArgumentNullException(nameof(crouchSettings));
             this.gravityHandler = gravityHandler ?? throw new ArgumentNullException(nameof(gravityHandler));
-            this.smoothSettings = smoothSettings ?? throw new ArgumentNullException(nameof(smoothSettings));
+            this.smoothSettings = smoothSettings != null ? smoothSettings : throw new ArgumentNullException(nameof(smoothSettings));
             this.crouchHandler = crouchHandler ?? throw new ArgumentNullException(nameof(crouchHandler));
             this.character = character != null ? character : throw new ArgumentNullException(nameof(character));
 
@@ -58,21 +59,21 @@ namespace Assets.root.RunMovement.Handlers
             currentState = MovementState.Idle;
         }
 
-        public void HandleMovement(Transform transform, PlayerInputController input)
+        public void HandleMovement(PlayerController input)
         {
             SmoothInput(input);
-            CalculateMovementState(transform, input);
+            CalculateMovementState(input);
             CalculateSpeed(input);
             CalculateSmoothSpeed();
-            CalculateMovementDirection(transform);
+            CalculateMovementDirection();
             CalculateFinalMovement();
             ApplyMovement();
         }
 
-        void SmoothInput(PlayerInputController input) => smoothInputVector = Vector2.Lerp(
-            smoothInputVector, input.MovementInput. Move(), Time.deltaTime * smoothSettings.smoothInputSpeed);
+        void SmoothInput(PlayerController input) => smoothInputVector = Vector2.Lerp(
+            smoothInputVector, input.MovementInput.Move(), Time.deltaTime * smoothSettings.smoothInputSpeed);
 
-        void CalculateMovementState(Transform transform, PlayerInputController input)
+        void CalculateMovementState(PlayerController input)
         {
             if (!input.MovementInput.HasInput)
             {
@@ -94,7 +95,7 @@ namespace Assets.root.RunMovement.Handlers
                 currentState = MovementState.Strafing;
                 return;
             }
-            if (input.MovementInput.RunIsPressed() && CanRun(transform))
+            if (input.MovementInput.RunIsPressed() && CanRun(character.transform))
             {
                 currentState = MovementState.Running;
                 return;
@@ -102,7 +103,7 @@ namespace Assets.root.RunMovement.Handlers
             currentState = MovementState.Walking;
         }
 
-        void CalculateSpeed(PlayerInputController input)
+        void CalculateSpeed(PlayerController input)
         {
             var baseSpeed = walkSettings.walkSpeed;
 
@@ -150,10 +151,10 @@ namespace Assets.root.RunMovement.Handlers
             return dot >= runSettings.canRunThreshold;
         }
 
-        void CalculateMovementDirection(Transform transform)
+        void CalculateMovementDirection()
         {
-            var vDir = transform.forward * smoothInputVector.y;
-            var hDir = transform.right * smoothInputVector.x;
+            var vDir = character.transform.forward * smoothInputVector.y;
+            var hDir = character.transform.right * smoothInputVector.x;
             finalMoveDir = vDir + hDir;
 
             smoothFinalMoveDir = Vector3.Lerp(

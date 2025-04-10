@@ -45,66 +45,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   character: {fileID: 1517587239015556779}
-  groundSettings:
-    useControllerFallback: 1
-    groundLayer:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    rayLength: 0.1
-    raySphereRadius: 0.1
-    checkInterval: 0.1
-    slopeLimit: 60
-  wallSettings:
-    obstacleLayers:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    rayObstacleLength: 0.1
-    rayObstacleSphereRadius: 0.1
-    checkInterval: 0.1
-  ceilSettings:
-    ceilingLayers:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    checkDistance: 0.1
-    checkRadius: 0.2
-    checkInterval: 0.1
-  bodyPushSettings:
-    pushLayers:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    canPush: 1
-    strength: 1
---- !u!1 &1321185214814985333
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1897193848780417552}
-  m_Layer: 0
-  m_Name: Target
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1897193848780417552
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1321185214814985333}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.75, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 1
-  m_Children: []
-  m_Father: {fileID: 1427874064368623495}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  groundSettings: {fileID: 11400000, guid: 32c279f1f5c47c84aa13b9aeb9ed70a0, type: 2}
+  wallSettings: {fileID: 11400000, guid: adb0312cc600a6b47937663e6175255a, type: 2}
+  ceilSettings: {fileID: 11400000, guid: adf8a6c7dc0c2c04d8ba5f8fdc85a735, type: 2}
+  bodyPushSettings: {fileID: 11400000, guid: 2a4edca3d1025514681cef73083fd464, type: 2}
+  jumpSettings: {fileID: 11400000, guid: 7c1fb7c7633096e428a500c50a451e1d, type: 2}
 --- !u!1 &1469925521335067635
 GameObject:
   m_ObjectHideFlags: 0
@@ -149,9 +94,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75acaefdea6814641bb03c61a3a218b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  controller: {fileID: 7745650289046423476}
   movement: {fileID: 6355460004564535099}
   look: {fileID: 9119566362780156653}
   collision: {fileID: 3839958531355698037}
+  cameraSwaySettings: {fileID: 11400000, guid: af102f6fe4f49a143b4a2eeb0d9831a2, type: 2}
+  headBobSettings: {fileID: 11400000, guid: d282a5ac328f9c646b8b0085de687e0d, type: 2}
+  smoothSettings: {fileID: 11400000, guid: b65a996ebc5378d48b253973c33c3d1e, type: 2}
+  movementSettings: {fileID: 11400000, guid: c42fca092333e5b4bb21e90e03e09888, type: 2}
 --- !u!1 &1647953070245610237
 GameObject:
   m_ObjectHideFlags: 0
@@ -227,7 +177,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 1648475310902007911}
   - {fileID: 6118072562124121056}
   - {fileID: 4776625655452458777}
   - {fileID: 1427874064368623495}
@@ -248,7 +197,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2d81ce438be04c4ba2ef3560eebfefe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  input: {fileID: 1471628359241324423}
   collision: {fileID: 3839958531355698037}
 --- !u!143 &1517587239015556779
 CharacterController:
@@ -329,9 +277,8 @@ GameObject:
   m_Component:
   - component: {fileID: 3673232252538128727}
   - component: {fileID: 8283842491944682295}
-  - component: {fileID: 3362187672240461548}
   m_Layer: 0
-  m_Name: CinemachineCamera
+  m_Name: Cinemachine
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -345,12 +292,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2323455981496939008}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.75, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
-  m_Father: {fileID: 1427874064368623495}
+  m_Father: {fileID: 5902858826984232250}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &8283842491944682295
 MonoBehaviour:
@@ -372,7 +319,7 @@ MonoBehaviour:
   m_StreamingVersion: 20241001
   m_LegacyPriority: 0
   Target:
-    TrackingTarget: {fileID: 1897193848780417552}
+    TrackingTarget: {fileID: 0}
     LookAtTarget: {fileID: 0}
     CustomLookAtTarget: 0
   Lens:
@@ -395,33 +342,7 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
---- !u!114 &3362187672240461548
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2323455981496939008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 625c14eee3ad46c99df7c7c891ef668a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Damping: {x: 0, y: 0, z: 0}
-  ShoulderOffset: {x: 0, y: 0, z: 0}
-  VerticalArmLength: 0
-  CameraSide: 0.6
-  CameraDistance: 0
-  AvoidObstacles:
-    Enabled: 0
-    CollisionFilter:
-      serializedVersion: 2
-      m_Bits: 1
-    IgnoreTag: 
-    CameraRadius: 0.2
-    DampingIntoCollision: 0
-    DampingFromCollision: 0.5
---- !u!1 &3396440567344536242
+--- !u!1 &4994112100317322161
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -429,42 +350,30 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1648475310902007911}
-  - component: {fileID: 1471628359241324423}
+  - component: {fileID: 5902858826984232250}
   m_Layer: 0
-  m_Name: Input
+  m_Name: Pivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &1648475310902007911
+--- !u!4 &5902858826984232250
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3396440567344536242}
+  m_GameObject: {fileID: 4994112100317322161}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 1.75, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
-  m_Children: []
-  m_Father: {fileID: 4131290852809582085}
+  m_Children:
+  - {fileID: 3673232252538128727}
+  m_Father: {fileID: 1427874064368623495}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1471628359241324423
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3396440567344536242}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 747bc4fff5d236447a3ff26326c19caa, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &8913855887938487312
 GameObject:
   m_ObjectHideFlags: 0
@@ -495,8 +404,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children:
-  - {fileID: 3673232252538128727}
-  - {fileID: 1897193848780417552}
+  - {fileID: 5902858826984232250}
   m_Father: {fileID: 4131290852809582085}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &9119566362780156653
@@ -511,99 +419,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3ada1d07560bcae4e95cb393d60cef50, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  target: {fileID: 1897193848780417552}
+  target: {fileID: 5902858826984232250}
   cinemachine: {fileID: 8283842491944682295}
-  movementSettings:
-    topClamp: 60
-    bottomClamp: -60
-    verticalSpeedRotation: 20
-    horizontalSpeedRotation: 20
-  swaySettings:
-    swayAmount: 1
-    swaySpeed: 1
-    returnSpeed: 3
-    swayTransitionTime: 0.5
-    runSwayIntensity: 1
-    defaultSwayIntensity: 0.5
-    changeDirectionMultiplier: 4
-    swayCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 2.6845634
-        outSlope: 2.6845634
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.055934515
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 0
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  fOVSettings:
-    zoomFOV: 40
-    zoomTransitionDuration: 0.25
-    zoomCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0.41261172
-        outSlope: 0.41261172
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0.102888085
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0.054159872
-        outSlope: 0.054159872
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.17418772
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    runFOV: 70
-    runTransitionDuration: 0.75
-    runReturnTransitionDuration: 0.5
-    runCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 2
-        outSlope: 2
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
+  controller: {fileID: 7745650289046423476}
+  movementSettings: {fileID: 11400000, guid: 877531f780801f54690aaf303f375d26, type: 2}
+  swaySettings: {fileID: 11400000, guid: af102f6fe4f49a143b4a2eeb0d9831a2, type: 2}
+  fOVSettings: {fileID: 11400000, guid: bbc7eed4b05835840b299bdc01c817e2, type: 2}
 --- !u!1 &8995285639557692086
 GameObject:
   m_ObjectHideFlags: 0
@@ -649,127 +470,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   character: {fileID: 1517587239015556779}
+  controller: {fileID: 7745650289046423476}
   collision: {fileID: 3839958531355698037}
-  look: {fileID: 9119566362780156653}
-  input: {fileID: 1471628359241324423}
-  movementSettings:
-    walkSpeed: 3
-    moveBackwardsSpeedPercent: 0.5
-    moveSideSpeedPercent: 0.7
-  jumpSettings:
-    jumpSpeed: 6
-    coyoteTime: 1
-    crouchJumpMultiplier: 1
-    jumpBufferTime: 1
-  runSettings:
-    runSpeed: 6
-    canRunThreshold: 0.7
-    runTransitionCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 2
-        outSlope: 2
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  crouchSettings:
-    crouchSpeed: 1
-    crouchPercent: 0.6
-    crouchTransitionDuration: 0.5
-    crouchTransitionCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      - serializedVersion: 3
-        time: 1
-        value: 1
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  landingSettings:
-    lowLandAmount: 0.1
-    highLandAmount: 0.4
-    landTimer: 0.5
-    landDuration: 0.5
-    maxLandAirTime: 0.1
-    maxAirTimeForImpact: 0.1
-    minAirTime: 0.1
-    landCurve:
-      serializedVersion: 2
-      m_Curve:
-      - serializedVersion: 3
-        time: 0
-        value: 0
-        inSlope: -6.524011
-        outSlope: -6.524011
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0.02928031
-      - serializedVersion: 3
-        time: 0.2
-        value: -1
-        inSlope: -0.42737108
-        outSlope: -0.42737108
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0.33333334
-        outWeight: 0.33333334
-      - serializedVersion: 3
-        time: 1
-        value: 0
-        inSlope: 0
-        outSlope: 0
-        tangentMode: 0
-        weightedMode: 0
-        inWeight: 0
-        outWeight: 0
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-  gravitySettings:
-    gravityMultiplier: 2.5
-    maxFallSpeed: 5
-    stickToGroundForce: 1
-  smoothSettings:
-    rotationAcceleration: 1
-    rotationDeceleration: 1
-    rotationDeadzone: 0.1
-    rotationThreshold: 0.1
-    smoothRotateSpeed: 10
-    smoothInputSpeed: 10
-    smoothVelocitySpeed: 3
-    smoothFinalDirectionSpeed: 10
-    smoothHeadBobSpeed: 5
-    experimental: 0
-    smoothInputMagnitudeSpeed: 5
+  cam: {fileID: 9119566362780156653}
+  walkSettings: {fileID: 11400000, guid: c42fca092333e5b4bb21e90e03e09888, type: 2}
+  jumpSettings: {fileID: 11400000, guid: 7c1fb7c7633096e428a500c50a451e1d, type: 2}
+  runSettings: {fileID: 11400000, guid: 17a58bbcf9a32be4ebdfaba7f0a460d6, type: 2}
+  crouchSettings: {fileID: 11400000, guid: fd57cb19cd90a9940ab31b633e60bd33, type: 2}
+  landingSettings: {fileID: 11400000, guid: 5266425e454a5c4469d9a0454206b4e6, type: 2}
+  gravitySettings: {fileID: 11400000, guid: 7d4a2c57fd53ce14c87ed6dd8f0543b8, type: 2}
+  smoothSettings: {fileID: 11400000, guid: b65a996ebc5378d48b253973c33c3d1e, type: 2}

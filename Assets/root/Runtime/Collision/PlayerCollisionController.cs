@@ -11,10 +11,8 @@ namespace Assets.root.Runtime.Movement
         [Header("Dependencies")]
         [SerializeField, Parent] CharacterController character;
         [Header("Settings")]
-        [SerializeField] GroundSettings groundSettings;
-        [SerializeField] WallSettings wallSettings;
-        [SerializeField] CeilSettings ceilSettings;
-        [SerializeField] BodyPushSettings bodyPushSettings;
+        [SerializeField] CollisionBodyPushSettings bodyPushSettings;
+        [SerializeField] MovementJumpSettings jumpSettings;
 
         public IGroundChecker GroundChecker { get; private set; }
         public ICeilChecker CeilChecker { get; private set; }
@@ -23,9 +21,9 @@ namespace Assets.root.Runtime.Movement
 
         void Awake()
         {
-            GroundChecker = new GroundCollisionHandler(character, groundSettings, new JumpSettings());
-            WallChecker = new WallCollisionHandler(character, wallSettings, character.transform);
-            CeilChecker = new CeilCollisionHandler(character.transform, ceilSettings, character);
+            GroundChecker = new GroundCollisionHandler(character, jumpSettings);
+            WallChecker = new WallCollisionHandler(character);
+            CeilChecker = new CeilCollisionHandler(character);
             BodyPushHandler = new BodyPushHandler(bodyPushSettings);
         }
 

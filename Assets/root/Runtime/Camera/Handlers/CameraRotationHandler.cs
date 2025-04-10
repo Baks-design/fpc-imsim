@@ -1,43 +1,56 @@
-using Assets.root.Runtime.Look.Interfaces;
-using Assets.root.Runtime.Look.Settings;
+using Assets.root.Runtime.Cam.Interfaces;
+using Assets.root.Runtime.Cam.Settings;
 using Assets.root.Runtime.Input.Handlers;
-using Assets.root.Runtime.Input.Interfaces;
 using UnityEngine;
 using System;
+using Assets.root.Runtime.Movement;
 
-namespace Assets.root.Runtime.Look.Handlers
+namespace Assets.root.Runtime.Cam.Handlers
 {
     public class CameraRotationHandler : ICameraRotation
     {
         readonly Transform target;
-        readonly ICameraInput inputProvider;
-        readonly IInputServices inputServices;
+        readonly Transform camT;
         readonly CameraRotationSettings rotationSettings;
         float targetPitch;
         float targetYaw;
+        float desiredPitch;
+        float desiredYaw;
 
-        public CameraRotationHandler(
-            Transform target, ICameraInput inputProvider, IInputServices inputServices,
-            CameraRotationSettings rotationSettings)
+        public CameraRotationHandler(Transform target, Transform camT, CameraRotationSettings rotationSettings)
         {
             this.target = target != null ? target : throw new ArgumentNullException(nameof(target));
-            this.inputProvider = inputProvider ?? throw new ArgumentNullException(nameof(inputProvider));
-            this.inputServices = inputServices ?? throw new ArgumentNullException(nameof(inputServices));
-            this.rotationSettings = rotationSettings ?? throw new ArgumentNullException(nameof(rotationSettings));
+            this.camT = camT != null ? camT : throw new ArgumentNullException(nameof(camT));
+            this.rotationSettings = rotationSettings != null ? rotationSettings :
+                throw new ArgumentNullException(nameof(rotationSettings));
         }
 
-        public void HandleRotation()
+        public void HandleRotation(PlayerController input)
         {
-            if (inputProvider.Look().sqrMagnitude < 0.01f) return;
+            CalculateRotation(input);
+            SmoothRotation();
+            ApplyMovement();
+        }
 
-            var deltaTimeMultiplier = inputServices.IsCurrentDeviceMouse() ? 1f : Time.deltaTime;
+        void CalculateRotation(PlayerController input)
+        {
+            var deltaTimeMultiplier = input.InputServices.IsCurrentDeviceMouse() ? 1f : Time.deltaTime;
 
-            targetPitch += -inputProvider.Look().y * rotationSettings.verticalSpeedRotation * deltaTimeMultiplier;
-            targetYaw += inputProvider.Look().x * rotationSettings.horizontalSpeedRotation * deltaTimeMultiplier;
+            desiredYaw += input.CameraInput.Look().x * rotationSettings.speedRotationX * deltaTimeMultiplier;
+            desiredPitch -= input.CameraInput.Look().y * rotationSettings.speedRotationY * deltaTimeMultiplier;
+            desiredPitch = RotationHelper.ClampAngle(desiredPitch, rotationSettings.bottomClampY, rotationSettings.topClampY);
+        }
 
-            targetPitch = RotationHelper.ClampAngle(targetPitch, rotationSettings.bottomClamp, rotationSettings.topClamp);
+        void SmoothRotation()
+        {
+            targetYaw = Mathf.Lerp(targetYaw, desiredYaw, rotationSettings.smoothRotationX * Time.deltaTime);
+            targetPitch = Mathf.Lerp(targetPitch, desiredPitch, rotationSettings.smoothRotationY * Time.deltaTime);
+        }
 
-            target.localRotation = Quaternion.Euler(targetPitch, targetYaw, 0f);
+        void ApplyMovement()
+        {
+            camT.eulerAngles = new Vector3(0f, targetYaw, 0f);
+            target.localEulerAngles = new Vector3(targetPitch, 0f, 0f);
         }
     }
 }

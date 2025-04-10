@@ -1,4 +1,3 @@
-using Assets.root.Runtime.Input.Interfaces;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
 using System;
@@ -18,10 +17,9 @@ namespace Assets.root.Runtime.Movement.Handlers
             Strafing
         }
 
-        readonly HeadBobSettings headBobSettings;
-        readonly SmoothSettings smoothSettings;
-        readonly IMovementInput inputData;
-        readonly MovementSettings movementSettings;
+        readonly EffectHeadBobSettings headBobSettings;
+        readonly MovementSmoothSettings smoothSettings;
+        readonly MovementWalkSettings movementSettings;
         HeadBobState currentState;
         Vector3 finalOffset;
         Vector3 targetPosition;
@@ -34,31 +32,32 @@ namespace Assets.root.Runtime.Movement.Handlers
         public float CurrentStateHeight { get; private set; }
 
         public HeadBobHandler(
-            HeadBobSettings headBobSettings,
-            SmoothSettings smoothSettings,
-            IMovementInput inputData,
-            MovementSettings movementSettings)
+            EffectHeadBobSettings headBobSettings,
+            MovementSmoothSettings smoothSettings,
+            MovementWalkSettings movementSettings)
         {
-            this.headBobSettings = headBobSettings ?? throw new ArgumentNullException(nameof(headBobSettings));
-            this.smoothSettings = smoothSettings ?? throw new ArgumentNullException(nameof(smoothSettings));
-            this.inputData = inputData ?? throw new ArgumentNullException(nameof(inputData));
-            this.movementSettings = movementSettings ?? throw new ArgumentNullException(nameof(movementSettings));
+            this.headBobSettings = headBobSettings != null ? headBobSettings : throw new ArgumentNullException(nameof(headBobSettings));
+            this.smoothSettings = smoothSettings != null ? smoothSettings : throw new ArgumentNullException(nameof(smoothSettings));
+            this.movementSettings = movementSettings != null ? movementSettings : throw new ArgumentNullException(nameof(movementSettings));
 
             currentState = HeadBobState.Idle;
             ResetHeadBob();
         }
 
-        public void UpdateHeadBob(IGroundChecker groundChecker, IWallChecker wallChecker,
-        ICrouchHandler crouchHandler, Transform yawTransform)
+        public void UpdateHeadBob(
+            IGroundChecker groundChecker, IWallChecker wallChecker, ICrouchHandler crouchHandler,
+            Transform yawTransform, PlayerController controller) //FIXME
         {
-            UpdateHeadBobState(groundChecker, wallChecker, crouchHandler);
+            UpdateHeadBobState(groundChecker, wallChecker, crouchHandler, controller);
             HandleHeadBobMovement();
             ApplyHeadBobPosition(yawTransform);
         }
 
-        void UpdateHeadBobState(IGroundChecker groundChecker, IWallChecker wallChecker, ICrouchHandler crouchHandler)
+        void UpdateHeadBobState(
+            IGroundChecker groundChecker, IWallChecker wallChecker, ICrouchHandler crouchHandler,
+            PlayerController controller)
         {
-            if (!inputData.HasInput || !groundChecker.IsGrounded ||
+            if (!controller.MovementInput.HasInput || !groundChecker.IsGrounded ||
                 wallChecker.IsHitWall || crouchHandler.IsDuringCrouchAnimation)
             {
                 currentState = HeadBobState.Idle;
@@ -71,19 +70,19 @@ namespace Assets.root.Runtime.Movement.Handlers
                 return;
             }
 
-            if (inputData.Move().y == -1f)
+            if (controller.MovementInput.Move().y == -1f)
             {
                 currentState = HeadBobState.Backpedaling;
                 return;
             }
 
-            if (inputData.Move().x != 0f && inputData.Move().y == 0f)
+            if (controller.MovementInput.Move().x != 0f && controller.MovementInput.Move().y == 0f)
             {
                 currentState = HeadBobState.Strafing;
                 return;
             }
 
-            if (inputData.RunIsPressed())
+            if (controller.MovementInput.RunIsPressed())
             {
                 currentState = HeadBobState.Running;
                 return;

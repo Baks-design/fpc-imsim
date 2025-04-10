@@ -1,10 +1,10 @@
 using System;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Look.Settings
+namespace Assets.root.Runtime.Cam.Settings
 {
-    [Serializable]
-    public class CameraFOVSettings
+    [CreateAssetMenu(menuName = "Settings/Camera/FOV")]
+    public class CameraFOVSettings : ScriptableObject
     {
         [Header("Zoom Settings")]
         [Range(20f, 60f)] public float zoomFOV = 40f;

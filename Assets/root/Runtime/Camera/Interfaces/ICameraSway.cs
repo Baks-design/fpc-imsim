@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Assets.root.Runtime.Look.Interfaces
+namespace Assets.root.Runtime.Cam.Interfaces
 {
     public interface ICameraSway
     {

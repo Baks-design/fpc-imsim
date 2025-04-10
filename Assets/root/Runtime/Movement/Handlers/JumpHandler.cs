@@ -8,7 +8,7 @@ namespace Assets.root.Runtime.Movement.Handlers
 {
     public class JumpHandler : IJumpHandler
     {
-        readonly JumpSettings settings;
+        readonly MovementJumpSettings settings;
         readonly ICrouchHandler crouchHandler;
         float coyoteTimeCounter;
         float jumpBufferCounter;
@@ -17,13 +17,13 @@ namespace Assets.root.Runtime.Movement.Handlers
         public Vector3 JumpVelocity { get; private set; }
         public bool IsJumping { get; private set; }
 
-        public JumpHandler(JumpSettings settings, ICrouchHandler crouchHandler)
+        public JumpHandler(MovementJumpSettings settings, ICrouchHandler crouchHandler)
         {
-            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
             this.crouchHandler = crouchHandler ?? throw new ArgumentNullException(nameof(crouchHandler));
         }
 
-        public void UpdateJump(IGroundChecker groundChecker, PlayerInputController input)
+        public void UpdateJump(IGroundChecker groundChecker, PlayerController input) //FIXME
         {
             // Update coyote time
             if (groundChecker.IsGrounded)

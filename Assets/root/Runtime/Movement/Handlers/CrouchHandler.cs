@@ -2,15 +2,15 @@ using System;
 using System.Threading;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
-using Name;
 using UnityEngine;
 
 namespace Assets.root.Runtime.Movement.Handlers
 {
     public class CrouchHandler : ICrouchHandler
     {
-        readonly CrouchSettings settings;
-        readonly CharacterController controller;
+        readonly MovementCrouchSettings settings;
+        readonly CharacterController character;
+        readonly Transform camera;
         CancellationTokenSource crouchTokenSource;
         Vector3 initCenter;
         Vector3 crouchCenter;
@@ -22,28 +22,27 @@ namespace Assets.root.Runtime.Movement.Handlers
         public bool IsCrouching { get; private set; }
         public bool IsDuringCrouchAnimation { get; private set; }
 
-        public CrouchHandler(CrouchSettings settings, CharacterController controller)
+        public CrouchHandler(MovementCrouchSettings settings, CharacterController character, Transform camera)
         {
-            this.settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            this.controller = controller != null ? controller : throw new ArgumentNullException(nameof(controller));
-            var camT = Camera.main.transform;
-            var cam = camT != null ? camT : throw new ArgumentNullException(nameof(camT));
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+            this.character = character != null ? character : throw new ArgumentNullException(nameof(character));
+            this.camera = camera != null ? camera : throw new ArgumentNullException(nameof(camera));
 
-            InitializeCrouchParameters(cam);
+            InitializeCrouchParameters(camera);
         }
 
         void InitializeCrouchParameters(Transform camera)
         {
-            initHeight = controller.height;
-            initCenter = controller.center;
+            initHeight = character.height;
+            initCenter = character.center;
             initCamHeight = camera.localPosition.y;
 
             crouchHeight = Mathf.Max(0.1f, initHeight * settings.crouchPercent);
-            crouchCenter = (crouchHeight / 2f + controller.skinWidth) * Vector3.up;
+            crouchCenter = (crouchHeight / 2f + character.skinWidth) * Vector3.up;
             crouchCamHeight = initCamHeight - (initHeight - crouchHeight);
         }
 
-        public async void HandleCrouch(PlayerInputController input, Transform camera)
+        public async void HandleCrouch(PlayerController input)
         {
             if (!input.MovementInput.CrouchWasPressed() || IsDuringCrouchAnimation || Time.deltaTime <= 0f)
                 return;
@@ -52,10 +51,10 @@ namespace Assets.root.Runtime.Movement.Handlers
             crouchTokenSource?.Cancel();
             crouchTokenSource?.Dispose();
 
-            await CrouchAnimationAsync(camera);
+            await CrouchAnimationAsync();
         }
 
-        async Awaitable CrouchAnimationAsync(Transform camera)
+        async Awaitable CrouchAnimationAsync()
         {
             crouchTokenSource = new CancellationTokenSource();
             var token = crouchTokenSource.Token;
@@ -67,8 +66,8 @@ namespace Assets.root.Runtime.Movement.Handlers
                 var percent = 0f;
                 var speed = 1f / Mathf.Max(0.001f, settings.crouchTransitionDuration);
 
-                var currentHeight = controller.height;
-                var currentCenter = controller.center;
+                var currentHeight = character.height;
+                var currentCenter = character.center;
                 var camPos = camera.localPosition;
                 var camCurrentHeight = camPos.y;
 
@@ -87,8 +86,8 @@ namespace Assets.root.Runtime.Movement.Handlers
                     var smoothPercent = settings.crouchTransitionCurve.Evaluate(Mathf.Clamp01(percent));
 
                     // Apply smooth transitions
-                    controller.height = Mathf.Lerp(currentHeight, desiredHeight, smoothPercent);
-                    controller.center = Vector3.Lerp(currentCenter, desiredCenter, smoothPercent);
+                    character.height = Mathf.Lerp(currentHeight, desiredHeight, smoothPercent);
+                    character.center = Vector3.Lerp(currentCenter, desiredCenter, smoothPercent);
 
                     camPos.y = Mathf.Lerp(camCurrentHeight, camDesiredHeight, smoothPercent);
                     camera.localPosition = camPos;
@@ -97,8 +96,8 @@ namespace Assets.root.Runtime.Movement.Handlers
                 }
 
                 // Ensure final values are set exactly
-                controller.height = desiredHeight;
-                controller.center = desiredCenter;
+                character.height = desiredHeight;
+                character.center = desiredCenter;
                 camPos.y = camDesiredHeight;
                 camera.localPosition = camPos;
             }
