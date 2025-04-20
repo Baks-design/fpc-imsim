@@ -13,5 +13,4 @@ MonoBehaviour:
   m_Name: Gravity Settings
   m_EditorClassIdentifier: 
   gravityMultiplier: 2.5
-  maxFallSpeed: 5
   stickToGroundForce: 1

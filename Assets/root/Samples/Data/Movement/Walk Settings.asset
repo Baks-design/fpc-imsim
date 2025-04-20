@@ -12,6 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3637d8a13e5dcd84ea30107c3e84cc70, type: 3}
   m_Name: Walk Settings
   m_EditorClassIdentifier: 
-  walkSpeed: 3
-  moveBackwardsSpeedPercent: 0.5
-  moveSideSpeedPercent: 0.7
+  MaxSpeedOnGround: 13
+  MovementSharpnessOnGround: 15
+  MaxSpeedCrouchedRatio: 0.5
+  MaxSpeedInAir: 10
+  AccelerationSpeedInAir: 25
+  SprintSpeedModifier: 1.5

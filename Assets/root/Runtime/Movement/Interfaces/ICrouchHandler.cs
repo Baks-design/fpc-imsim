@@ -1,10 +1,15 @@
+using System;
+
 namespace Assets.root.Runtime.Movement.Interfaces
 {
     public interface ICrouchHandler
     {
         bool IsCrouching { get; }
-        bool IsDuringCrouchAnimation { get; }
 
-        void HandleCrouch(PlayerController input);
+        event Action<bool> OnStanceChanged;
+
+        void ToggleCrouch();
+        void SetCrouch(bool isCrouching);
+        void UpdateCharacterHeight(bool force);
     }
 }

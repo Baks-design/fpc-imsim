@@ -1,17 +1,20 @@
-using UnityEngine;
-
-namespace Assets.root.Runtime.Input.Handlers
+namespace Assets.root.Runtime.Utilities.Helpers
 {
     public static class RotationHelper
     {
         public static float ClampAngle(float angle, float min, float max)
         {
-            if (angle < -360f)
-                angle = (angle % 360f) + 360f;
-            else if (angle > 360f)
-                angle %= 360f;
-                
-            return Mathf.Clamp(angle, min, max);
+            angle = NormalizeAngle(angle);
+            return Mathfs.Clamp(angle, min, max);
+        }
+
+        public static float NormalizeAngle(float angle)
+        {
+            // More efficient angle normalization
+            angle %= 360f;
+            if (angle > 180f) angle -= 360f;
+            if (angle < -180f) angle += 360f;
+            return angle;
         }
     }
 }

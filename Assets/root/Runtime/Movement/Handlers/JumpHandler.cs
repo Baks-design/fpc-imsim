@@ -1,7 +1,6 @@
 using System;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
-using Name;
 using UnityEngine;
 
 namespace Assets.root.Runtime.Movement.Handlers
@@ -9,70 +8,33 @@ namespace Assets.root.Runtime.Movement.Handlers
     public class JumpHandler : IJumpHandler
     {
         readonly MovementJumpSettings settings;
-        readonly ICrouchHandler crouchHandler;
-        float coyoteTimeCounter;
-        float jumpBufferCounter;
-        bool wasJumping;
+        readonly IMovementHandler movementHandler;
 
-        public Vector3 JumpVelocity { get; private set; }
-        public bool IsJumping { get; private set; }
+        public bool HasJumpedThisFrame { get; private set; }
+        public float LastTimeJumped { get; private set; }
 
-        public JumpHandler(MovementJumpSettings settings, ICrouchHandler crouchHandler)
+        public JumpHandler(
+            MovementJumpSettings settings,
+            IMovementHandler movementHandler)
         {
             this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
-            this.crouchHandler = crouchHandler ?? throw new ArgumentNullException(nameof(crouchHandler));
+            this.movementHandler = movementHandler ?? throw new ArgumentNullException(nameof(movementHandler));
+
+            HasJumpedThisFrame = false;
+            LastTimeJumped = 0f;
         }
 
-        public void UpdateJump(IGroundChecker groundChecker, PlayerController input) //FIXME
+        public void PerformJump()
         {
-            // Update coyote time
-            if (groundChecker.IsGrounded)
-                coyoteTimeCounter = settings.coyoteTime;
-            else
-                coyoteTimeCounter -= Time.deltaTime;
+            // Reset vertical velocity
+            var velocity = movementHandler.Velocity;
+            movementHandler.Velocity = new Vector3(velocity.x, 0f, velocity.z);
+            // Apply jump force
+            movementHandler.Velocity += Vector3.up * settings.JumpForce;
 
-            // Update jump buffer
-            if (input.MovementInput.JumpWasPressed())
-                jumpBufferCounter = settings.jumpBufferTime;
-            else
-                jumpBufferCounter -= Time.deltaTime;
-
-            IsJumping = !groundChecker.IsGrounded && wasJumping;
-
-            wasJumping = !groundChecker.IsGrounded;
-        }
-
-        public void HandleJump(IGroundChecker groundChecker)
-        {
-            var canJump = (coyoteTimeCounter > 0f || groundChecker.IsGrounded) &&
-                          !crouchHandler.IsCrouching &&
-                          !crouchHandler.IsDuringCrouchAnimation;
-
-            var shouldJump = jumpBufferCounter > 0f && canJump;
-
-            if (shouldJump)
-            {
-                var jumpSpeed = settings.jumpSpeed;
-
-                // Apply crouch jump bonus if jumping while crouched (but not during crouch animation)
-                if (crouchHandler.IsCrouching)
-                    jumpSpeed *= settings.crouchJumpMultiplier;
-
-                JumpVelocity = Vector3.up * jumpSpeed;
-                coyoteTimeCounter = 0f;
-                jumpBufferCounter = 0f;
-            }
-            else
-                JumpVelocity = Vector3.zero;
-        }
-
-        public void ResetJump()
-        {
-            JumpVelocity = Vector3.zero;
-            coyoteTimeCounter = 0f;
-            jumpBufferCounter = 0f;
-            IsJumping = false;
-            wasJumping = false;
+            // Update state
+            LastTimeJumped = Time.time;
+            HasJumpedThisFrame = !HasJumpedThisFrame;
         }
     }
 }

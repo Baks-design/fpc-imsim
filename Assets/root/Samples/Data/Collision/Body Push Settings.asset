@@ -16,4 +16,4 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   canPush: 1
-  strength: 1
+  strength: 5

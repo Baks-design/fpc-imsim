@@ -1,7 +1,10 @@
 ﻿using System;
+using Assets.root.Runtime.Collision.Interfaces;
+using Assets.root.Runtime.Collision.Settings;
+using Assets.root.Runtime.Utilities.Extensions;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Movement.Handlers
+namespace Assets.root.Runtime.Collision.Handlers
 {
 	public class BodyPushHandler : IBodyPushHandler
 	{

@@ -1,49 +1,60 @@
 using System;
-using Assets.root.Runtime.Movement.Interfaces;
-using Assets.root.Runtime.Movement.Settings;
+using Assets.root.Runtime.Collision.Interfaces;
+using Assets.root.Runtime.Collision.Settings;
+using Assets.root.Runtime.Utilities.Helpers;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Movement.Handlers
+namespace Assets.root.Runtime.Collision.Handlers
 {
     public class GroundCollisionHandler : IGroundChecker
     {
-        readonly CharacterController controller;
-        readonly MovementJumpSettings jumpSettings;
-        bool isGrounded;
-        bool wasGrounded;
-        float lastGroundTime;
+        readonly GroundCheckSettings settings;
+        readonly CharacterController character;
+        const float k_GroundCheckDistanceInAir = 0.07f;
 
+        public bool IsLanded => IsGrounded && !WasGroundedLastFrame;
         public bool IsGrounded { get; private set; }
-        public bool IsPreviouslyGrounded { get; private set; }
-        public float TimeSinceGrounded => Time.time - lastGroundTime;
+        public bool WasGroundedLastFrame { get; set; }
+        public Vector3 GroundNormal { get; private set; }
 
-        public GroundCollisionHandler(CharacterController controller, MovementJumpSettings jumpSettings)
+        public GroundCollisionHandler(GroundCheckSettings settings, CharacterController character)
         {
-            this.controller = controller != null ? controller : throw new ArgumentNullException(nameof(controller));
-            this.jumpSettings = jumpSettings != null ? jumpSettings : throw new ArgumentNullException(nameof(jumpSettings));
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+            this.character = character != null ? character : throw new ArgumentNullException(nameof(character));
         }
 
         public void UpdateGroundCheck()
         {
-            IsPreviouslyGrounded = IsGrounded;
-            wasGrounded = isGrounded;
+            WasGroundedLastFrame = IsGrounded;
 
-            isGrounded = CustomCharacterPhysics.IsCharacterGrounded(controller, out var _);
+            var checkDistance = IsGrounded
+                ? (character.skinWidth + settings.GroundCheckDistance)
+                : k_GroundCheckDistanceInAir;
 
-            // Update ground normal if grounded
-            if (isGrounded)
-               lastGroundTime = Time.time;
-           
-            // Apply coyote time if leaving ground
-            IsGrounded = wasGrounded && !isGrounded ? TimeSinceGrounded <= jumpSettings.coyoteTime : isGrounded;
-        }
+            IsGrounded = false;
+            GroundNormal = Vector3.up;
 
-        public void DrawDebugGizmos()
-        {
-            var rayStart = controller.transform.position + Vector3.up * (controller.skinWidth + 0.1f);
-            var radius = controller.radius;
-            Gizmos.color = IsGrounded ? Color.red : Color.green;
-            Gizmos.DrawWireSphere(rayStart, radius);
+            if (Physics.CapsuleCast(
+                TransformHelper.GetCapsuleBottomHemisphere(character.transform, character.radius),
+                TransformHelper.GetCapsuleTopHemisphere(character.transform, character.height, character.radius),
+                character.radius,
+                Vector3.down,
+                out var hit,
+                checkDistance,
+                settings.GroundCheckLayers,
+                QueryTriggerInteraction.Ignore))
+            {
+                GroundNormal = hit.normal;
+
+                if (Vector3.Dot(hit.normal, character.transform.up) > 0f &&
+                    TransformHelper.IsNormalUnderSlopeLimit(character.transform, GroundNormal, character.slopeLimit))
+                {
+                    IsGrounded = true;
+
+                    if (hit.distance > character.skinWidth)
+                        character.Move(Vector3.down * hit.distance);
+                }
+            }
         }
     }
 }

@@ -1,8 +1,12 @@
+using Assets.root.Runtime.Collision;
+using UnityEngine;
+
 namespace Assets.root.Runtime.Movement.Interfaces
 {
     public interface ILandHandler
     {
-        void HandleLanding(IGroundChecker groundChecker);
-        void CancelLanding();
+        Vector3 LatestImpactSpeed { get; set; }
+
+        void ApplyLanding(PlayerCollisionController collision);
     }
 }

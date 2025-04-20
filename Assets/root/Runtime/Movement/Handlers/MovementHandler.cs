@@ -1,190 +1,73 @@
 using System;
-using Assets.root.Runtime.Movement;
+using Assets.root.Runtime.Collision;
+using Assets.root.Runtime.Input.Interfaces;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
-using Name;
+using Assets.root.Runtime.Utilities.Helpers;
 using UnityEngine;
 
-namespace Assets.root.RunMovement.Handlers
+namespace Assets.root.Runtime.Movement.Handlers
 {
     public class MovementHandler : IMovementHandler
     {
-        public enum MovementState
-        {
-            Idle,
-            Walking,
-            Running,
-            Crouching,
-            Backpedaling,
-            Strafing
-        }
-
-        readonly MovementWalkSettings walkSettings;
-        readonly MovementCrouchSettings crouchSettings;
-        readonly MovementRunSettings runSettings;
-        readonly IGravityHandler gravityHandler;
-        readonly MovementSmoothSettings smoothSettings;
+        readonly MovementWalkSettings settings;
+        readonly IMovementInput movementInput;
         readonly ICrouchHandler crouchHandler;
         readonly CharacterController character;
-        readonly float walkRunSpeedDifference;
-        MovementState currentState;
-        Vector3 finalMoveDir;
-        Vector3 smoothFinalMoveDir;
-        Vector2 smoothInputVector;
-        float smoothCurrentSpeed;
-        float finalSmoothCurrentSpeed;
 
-        public Vector3 FinalMove { get; private set; }
-        public float CurrentSpeed { get; private set; }
-        public MovementState CurrentState => currentState;
+        public Vector3 Velocity { get; set; }
+        public bool IsRunning { get; set; }
 
         public MovementHandler(
-            MovementWalkSettings walkSettings,
-            MovementCrouchSettings crouchSettings,
-            MovementRunSettings runSettings,
-            IGravityHandler gravityHandler,
-            MovementSmoothSettings smoothSettings,
+            MovementWalkSettings settings,
+            IMovementInput movementInput,
             ICrouchHandler crouchHandler,
             CharacterController character)
         {
-            this.walkSettings = walkSettings != null ? walkSettings : throw new ArgumentNullException(nameof(walkSettings));
-            this.runSettings = runSettings != null ? runSettings : throw new ArgumentNullException(nameof(runSettings));
-            this.crouchSettings = crouchSettings != null ? crouchSettings : throw new ArgumentNullException(nameof(crouchSettings));
-            this.gravityHandler = gravityHandler ?? throw new ArgumentNullException(nameof(gravityHandler));
-            this.smoothSettings = smoothSettings != null ? smoothSettings : throw new ArgumentNullException(nameof(smoothSettings));
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+            this.movementInput = movementInput ?? throw new ArgumentNullException(nameof(movementInput));
             this.crouchHandler = crouchHandler ?? throw new ArgumentNullException(nameof(crouchHandler));
             this.character = character != null ? character : throw new ArgumentNullException(nameof(character));
-
-            walkRunSpeedDifference = runSettings.runSpeed - walkSettings.walkSpeed;
-            currentState = MovementState.Idle;
         }
 
-        public void HandleMovement(PlayerController input)
+        public void ApplyMove(PlayerCollisionController collision)
         {
-            SmoothInput(input);
-            CalculateMovementState(input);
-            CalculateSpeed(input);
-            CalculateSmoothSpeed();
-            CalculateMovementDirection();
-            CalculateFinalMovement();
-            ApplyMovement();
-        }
+            var input = new Vector3(movementInput.Move().x, 0f, movementInput.Move().y);
+            var worldspaceMoveInput = character.transform.TransformVector(input);
 
-        void SmoothInput(PlayerController input) => smoothInputVector = Vector2.Lerp(
-            smoothInputVector, input.MovementInput.Move(), Time.deltaTime * smoothSettings.smoothInputSpeed);
-
-        void CalculateMovementState(PlayerController input)
-        {
-            if (!input.MovementInput.HasInput)
-            {
-                currentState = MovementState.Idle;
-                return;
-            }
-            if (crouchHandler.IsCrouching)
-            {
-                currentState = MovementState.Crouching;
-                return;
-            }
-            if (input.MovementInput.Move().y == -1f)
-            {
-                currentState = MovementState.Backpedaling;
-                return;
-            }
-            if (input.MovementInput.Move().x != 0f && input.MovementInput.Move().y == 0f)
-            {
-                currentState = MovementState.Strafing;
-                return;
-            }
-            if (input.MovementInput.RunIsPressed() && CanRun(character.transform))
-            {
-                currentState = MovementState.Running;
-                return;
-            }
-            currentState = MovementState.Walking;
-        }
-
-        void CalculateSpeed(PlayerController input)
-        {
-            var baseSpeed = walkSettings.walkSpeed;
-
-            switch (currentState)
-            {
-                case MovementState.Running:
-                    baseSpeed = runSettings.runSpeed;
-                    break;
-                case MovementState.Crouching:
-                    baseSpeed = crouchSettings.crouchSpeed;
-                    break;
-                case MovementState.Backpedaling:
-                    baseSpeed *= walkSettings.moveBackwardsSpeedPercent;
-                    break;
-                case MovementState.Strafing:
-                    baseSpeed *= walkSettings.moveSideSpeedPercent;
-                    break;
-            }
-
-            CurrentSpeed = input.MovementInput.HasInput ? baseSpeed : 0f;
-        }
-
-        void CalculateSmoothSpeed()
-        {
-            smoothCurrentSpeed = Mathf.Lerp(smoothCurrentSpeed, CurrentSpeed, Time.deltaTime * smoothSettings.smoothVelocitySpeed);
-
-            if (currentState == MovementState.Running)
-            {
-                var walkRunPercent = Mathf.InverseLerp(walkSettings.walkSpeed, runSettings.runSpeed, smoothCurrentSpeed);
-
-                finalSmoothCurrentSpeed = runSettings.runTransitionCurve.Evaluate(walkRunPercent) *
-                                        walkRunSpeedDifference + walkSettings.walkSpeed;
-            }
+            if (collision.GroundChecker.IsGrounded)
+                HandleGroundedMovement(collision, worldspaceMoveInput);
             else
-                finalSmoothCurrentSpeed = smoothCurrentSpeed;
+                HandleAirMovement(worldspaceMoveInput);
+
+            ApplyFinalMovement();
         }
 
-        bool CanRun(Transform transform)
+        void HandleGroundedMovement(PlayerCollisionController collision, Vector3 worldspaceMoveInput)
         {
-            if (smoothFinalMoveDir == Vector3.zero) return false;
-            if (crouchHandler.IsCrouching) return false;
+            var speedModifier = IsRunning ? settings.SprintSpeedModifier : 1f;
+            var targetVelocity = settings.MaxSpeedOnGround * speedModifier * worldspaceMoveInput;
 
-            var normalizedDir = smoothFinalMoveDir.normalized;
-            var dot = Vector3.Dot(transform.forward, normalizedDir);
-            return dot >= runSettings.canRunThreshold;
+            if (crouchHandler.IsCrouching)
+                targetVelocity *= settings.MaxSpeedCrouchedRatio;
+
+            targetVelocity = TransformHelper.GetDirectionReorientedOnSlope(
+                character.transform, targetVelocity.normalized, collision.GroundChecker.GroundNormal) * targetVelocity.magnitude;
+
+            Velocity = Vector3.Lerp(Velocity, targetVelocity, settings.MovementSharpnessOnGround * Time.deltaTime);
         }
 
-        void CalculateMovementDirection()
+        void HandleAirMovement(Vector3 worldspaceMoveInput)
         {
-            var vDir = character.transform.forward * smoothInputVector.y;
-            var hDir = character.transform.right * smoothInputVector.x;
-            finalMoveDir = vDir + hDir;
+            var speedModifier = IsRunning ? settings.SprintSpeedModifier : 1f;
+            Velocity += settings.AccelerationSpeedInAir * Time.deltaTime * worldspaceMoveInput;
 
-            smoothFinalMoveDir = Vector3.Lerp(
-                smoothFinalMoveDir,
-                finalMoveDir,
-                Time.deltaTime * smoothSettings.smoothFinalDirectionSpeed
-            );
+            var verticalVelocity = Velocity.y;
+            var horizontalVelocity = Vector3.ProjectOnPlane(Velocity, Vector3.up);
+            horizontalVelocity = Vector3.ClampMagnitude(horizontalVelocity, settings.MaxSpeedInAir * speedModifier);
+            Velocity = horizontalVelocity + (Vector3.up * verticalVelocity);
         }
 
-        void CalculateFinalMovement()
-        {
-            var inputMagnitude = smoothSettings.experimental
-                ? Mathf.Lerp(0f, 1f, Time.deltaTime * smoothSettings.smoothInputMagnitudeSpeed)
-                : 1f;
-
-            var horizontalMovement = finalSmoothCurrentSpeed * inputMagnitude * smoothFinalMoveDir;
-            FinalMove = new Vector3(horizontalMovement.x, gravityHandler.Gravity.y, horizontalMovement.z);
-        }
-
-        void ApplyMovement() => character.Move(FinalMove * Time.deltaTime);
-
-        public void ResetMovement()
-        {
-            smoothInputVector = Vector2.zero;
-            finalMoveDir = Vector3.zero;
-            smoothFinalMoveDir = Vector3.zero;
-            smoothCurrentSpeed = 0f;
-            finalSmoothCurrentSpeed = 0f;
-            FinalMove = Vector3.zero;
-            currentState = MovementState.Idle;
-        }
+        void ApplyFinalMovement() => character.Move(Velocity * Time.deltaTime);
     }
 }

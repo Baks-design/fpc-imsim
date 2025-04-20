@@ -1,4 +1,4 @@
-namespace Assets.root.Runtime.Input.Handlers
+namespace Assets.root.Runtime.Utilities.Helpers
 {
     public static class InputsTags
     {

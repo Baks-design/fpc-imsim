@@ -1,26 +1,37 @@
 using System;
-using Assets.root.Runtime.Movement.Interfaces;
+using Assets.root.Runtime.Collision.Interfaces;
+using Assets.root.Runtime.Utilities.Helpers;
 using UnityEngine;
 
-namespace Assets.root.Runtime.Movement.Handlers
+namespace Assets.root.Runtime.Collision.Handlers
 {
     public class CeilCollisionHandler : ICeilChecker
     {
-        readonly CharacterController controller;
+        readonly CharacterController character;
+        readonly Collider[] results = new Collider[5];
+        const float StandingHeight = 1.8f;
 
         public bool IsHitCeil { get; private set; }
 
-        public CeilCollisionHandler(CharacterController controller)
-        => this.controller = controller != null ? controller : throw new ArgumentNullException(nameof(controller));
+        public CeilCollisionHandler(CharacterController character)
+        => this.character = character != null ? character : throw new ArgumentNullException(nameof(character));
 
-        public void UpdateCeilCheck() => IsHitCeil = CustomCharacterPhysics.CheckHeadroom(controller, out var _);
-
-        public void DrawDebugGizmos()
+        public bool UpdateCeilCheck()
         {
-            var rayStart = controller.transform.position + Vector3.up * (controller.height - controller.radius);
-            var radius = controller.radius * 0.9f;
-            Gizmos.color = IsHitCeil ? Color.red : Color.green;
-            Gizmos.DrawWireSphere(rayStart, radius);
+            var numOverlaps = Physics.OverlapCapsuleNonAlloc(
+                TransformHelper.GetCapsuleBottomHemisphere(character.transform, character.radius),
+                TransformHelper.GetCapsuleTopHemisphere(character.transform, StandingHeight, character.radius),
+                character.radius,
+                results,
+                -1,
+                QueryTriggerInteraction.Ignore
+            );
+
+            for (var i = 0; i < numOverlaps; i++)
+                if (results[i] != character)
+                    return false;
+
+            return true;
         }
     }
 }

@@ -1,6 +1,6 @@
 using System;
 using Assets.root.Runtime.Movement.Interfaces;
-using Assets.root.Runtime.Movement.Settings;
+using Assets.root.Runtime.Utilities.Helpers;
 using UnityEngine;
 
 namespace Assets.root.Runtime.Movement.Handlers
@@ -8,19 +8,22 @@ namespace Assets.root.Runtime.Movement.Handlers
     public class RotationHandler : IRotationHandler
     {
         readonly Transform player;
-        readonly MovementSmoothSettings settings;
-        readonly Transform cameraT;
+        readonly Transform camera;
 
-        public RotationHandler(Transform player, MovementSmoothSettings settings, Transform cameraT)
+        public RotationHandler(Transform player, Transform camera)
         {
             this.player = player != null ? player : throw new ArgumentNullException(nameof(player));
-            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
-            this.cameraT = cameraT != null ? cameraT : throw new ArgumentNullException(nameof(cameraT));
+            this.camera = camera != null ? camera : throw new ArgumentNullException(nameof(camera));
         }
 
         public void HandleRotation()
-        => player.rotation = Quaternion.Slerp(player.rotation, cameraT.rotation, Time.deltaTime * settings.smoothRotateSpeed);
-
-        public void ResetRotation() => cameraT.localEulerAngles = Vector3.zero;
+        {
+            var targetRot = Quaternion.Euler(
+                player.rotation.eulerAngles.x,
+                camera.rotation.eulerAngles.y,
+                player.rotation.eulerAngles.z
+            );
+            player.rotation = Mathfs.ExpRotDecay(player.rotation, targetRot, Time.deltaTime, 16f);
+        }
     }
 }

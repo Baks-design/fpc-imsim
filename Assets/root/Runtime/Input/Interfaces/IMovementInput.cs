@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Assets.root.Runtime.Input.Interfaces
 {
@@ -7,10 +8,8 @@ namespace Assets.root.Runtime.Input.Interfaces
         bool HasInput { get; }
 
         Vector2 Move();
-        bool RunWasPressed();
-        bool RunIsPressed();
-        bool RunWasReleased();
-        bool CrouchWasPressed();
-        bool JumpWasPressed();
+        InputAction Run();
+        InputAction Crouch();
+        InputAction Jump();
     }
 }

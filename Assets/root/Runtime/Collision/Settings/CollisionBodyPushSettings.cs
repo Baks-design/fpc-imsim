@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Assets.root.Runtime.Movement.Handlers
+namespace Assets.root.Runtime.Collision.Settings
 {
     [CreateAssetMenu(menuName = "Settings/Collision/BodyPush")]
     public class CollisionBodyPushSettings : ScriptableObject

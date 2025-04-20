@@ -1,4 +1,5 @@
 using Assets.root.Runtime.Input.Interfaces;
+using Assets.root.Runtime.Utilities.Helpers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -16,8 +17,6 @@ namespace Assets.root.Runtime.Input.Handlers
         }
 
         public Vector2 Look() => lookAction.ReadValue<Vector2>();
-        public bool ZoomWasPressed() => zoomAction.WasPressedThisDynamicUpdate();
-        public bool ZoomIsPressed() => zoomAction.IsPressed();
-        public bool ZoomWasReleased() => zoomAction.WasReleasedThisDynamicUpdate();
+        public InputAction Zoom() => zoomAction;
     }
 }

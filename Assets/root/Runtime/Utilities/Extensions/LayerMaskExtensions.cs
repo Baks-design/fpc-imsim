@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Assets.root.Runtime.Movement.Handlers
+namespace Assets.root.Runtime.Utilities.Extensions
 {
     public static class LayerMaskExtensions
     {

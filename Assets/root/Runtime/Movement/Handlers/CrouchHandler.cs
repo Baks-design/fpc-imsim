@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
 using UnityEngine;
@@ -10,102 +9,74 @@ namespace Assets.root.Runtime.Movement.Handlers
     {
         readonly MovementCrouchSettings settings;
         readonly CharacterController character;
-        readonly Transform camera;
-        CancellationTokenSource crouchTokenSource;
-        Vector3 initCenter;
-        Vector3 crouchCenter;
-        float initHeight;
-        float crouchHeight;
-        float initCamHeight;
-        float crouchCamHeight;
+        readonly Transform cameraYaw;
+        readonly Transform aimPoint;
+        bool m_IsCrouching;
+        bool isCrouching;
+        float m_TargetCharacterHeight;
 
-        public bool IsCrouching { get; private set; }
-        public bool IsDuringCrouchAnimation { get; private set; }
+        public bool IsCrouching => m_IsCrouching;
 
-        public CrouchHandler(MovementCrouchSettings settings, CharacterController character, Transform camera)
+        public event Action<bool> OnStanceChanged = delegate { };
+
+        public CrouchHandler(
+            MovementCrouchSettings settings,
+            CharacterController character,
+            Transform cameraYaw,
+            Transform aimPoint)
         {
             this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
             this.character = character != null ? character : throw new ArgumentNullException(nameof(character));
-            this.camera = camera != null ? camera : throw new ArgumentNullException(nameof(camera));
-
-            InitializeCrouchParameters(camera);
+            this.cameraYaw = cameraYaw != null ? cameraYaw : throw new ArgumentNullException(nameof(cameraYaw));
+            this.aimPoint = aimPoint != null ? aimPoint : throw new ArgumentNullException(nameof(aimPoint));
+            isCrouching = false;
         }
 
-        void InitializeCrouchParameters(Transform camera)
+        public void ToggleCrouch()
         {
-            initHeight = character.height;
-            initCenter = character.center;
-            initCamHeight = camera.localPosition.y;
-
-            crouchHeight = Mathf.Max(0.1f, initHeight * settings.crouchPercent);
-            crouchCenter = (crouchHeight / 2f + character.skinWidth) * Vector3.up;
-            crouchCamHeight = initCamHeight - (initHeight - crouchHeight);
+            isCrouching = !isCrouching;
+            SetCrouch(isCrouching);
         }
 
-        public async void HandleCrouch(PlayerController input)
+        public void SetCrouch(bool isCrouching)
         {
-            if (!input.MovementInput.CrouchWasPressed() || IsDuringCrouchAnimation || Time.deltaTime <= 0f)
-                return;
-
-            // Cancel any existing crouch animation
-            crouchTokenSource?.Cancel();
-            crouchTokenSource?.Dispose();
-
-            await CrouchAnimationAsync();
+            m_IsCrouching = isCrouching;
+            m_TargetCharacterHeight = m_IsCrouching ? settings.CapsuleHeightCrouching : settings.CapsuleHeightStanding;
+            OnStanceChanged.Invoke(m_IsCrouching);
         }
 
-        async Awaitable CrouchAnimationAsync()
+        public void UpdateCharacterHeight(bool force)
         {
-            crouchTokenSource = new CancellationTokenSource();
-            var token = crouchTokenSource.Token;
-
-            try
+            // Update height instantly
+            if (force)
             {
-                IsDuringCrouchAnimation = true;
-
-                var percent = 0f;
-                var speed = 1f / Mathf.Max(0.001f, settings.crouchTransitionDuration);
-
-                var currentHeight = character.height;
-                var currentCenter = character.center;
-                var camPos = camera.localPosition;
-                var camCurrentHeight = camPos.y;
-
-                var desiredHeight = IsCrouching ? initHeight : crouchHeight;
-                var desiredCenter = IsCrouching ? initCenter : crouchCenter;
-                var camDesiredHeight = IsCrouching ? initCamHeight : crouchCamHeight;
-
-                IsCrouching = !IsCrouching;
-
-                while (percent < 1f)
-                {
-                    if (token.IsCancellationRequested)
-                        break;
-
-                    percent += Time.deltaTime * speed;
-                    var smoothPercent = settings.crouchTransitionCurve.Evaluate(Mathf.Clamp01(percent));
-
-                    // Apply smooth transitions
-                    character.height = Mathf.Lerp(currentHeight, desiredHeight, smoothPercent);
-                    character.center = Vector3.Lerp(currentCenter, desiredCenter, smoothPercent);
-
-                    camPos.y = Mathf.Lerp(camCurrentHeight, camDesiredHeight, smoothPercent);
-                    camera.localPosition = camPos;
-
-                    await Awaitable.NextFrameAsync();
-                }
-
-                // Ensure final values are set exactly
-                character.height = desiredHeight;
-                character.center = desiredCenter;
-                camPos.y = camDesiredHeight;
-                camera.localPosition = camPos;
+                character.height = m_TargetCharacterHeight;
+                character.center = 0.5f * character.height * Vector3.up;
+                cameraYaw.transform.localPosition = m_TargetCharacterHeight * settings.CameraHeightRatio * Vector3.up;
+                aimPoint.transform.localPosition = character.center;
             }
-            finally
+            // Update smooth height
+            else if (character.height != m_TargetCharacterHeight)
             {
-                IsDuringCrouchAnimation = false;
-                crouchTokenSource?.Dispose();
-                crouchTokenSource = null;
+                // Smoothly interpolate height
+                character.height = Mathf.Lerp(
+                    character.height,
+                    m_TargetCharacterHeight,
+                    settings.CrouchingSharpness * Time.deltaTime
+                );
+
+                // Adjust center position
+                character.center = 0.5f * character.height * Vector3.up;
+
+                // Adjust camera position
+                cameraYaw.localPosition = Vector3.Lerp(
+                    cameraYaw.localPosition,
+                    settings.CameraHeightRatio * m_TargetCharacterHeight * Vector3.up,
+                    settings.CrouchingSharpness * Time.deltaTime
+                );
+
+                // Adjust aim point
+                aimPoint.localPosition = character.center;
             }
         }
     }

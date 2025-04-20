@@ -1,104 +1,74 @@
 using System;
-using System.Threading;
+using Assets.root.Runtime.Collision;
+using Assets.root.Runtime.Damage;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
 using UnityEngine;
 
 namespace Assets.root.Runtime.Movement.Handlers
 {
-
     public class LandHandler : ILandHandler
     {
-        readonly IGravityHandler gravityHandler;
         readonly MovementLandingSettings settings;
-        readonly Transform yawTransform;
-        CancellationTokenSource landTokenSource;
+        readonly IMovementHandler movementHandler;
+        readonly PlayerHealthController playerHealth;
 
-        public bool IsLanding { get; private set; }
-        public float LastLandImpact { get; private set; }
+        public Vector3 LatestImpactSpeed { get; set; }
 
-        public LandHandler(IGravityHandler gravityHandler, MovementLandingSettings settings, Transform yawTransform)
+        public event Action OnLand = delegate { };
+
+        public LandHandler(
+            MovementLandingSettings settings,
+            IMovementHandler movementHandler,
+            PlayerHealthController playerHealth)
         {
-            this.gravityHandler = gravityHandler ?? throw new ArgumentNullException(nameof(gravityHandler));
             this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
-            this.yawTransform = yawTransform != null ? yawTransform : throw new ArgumentNullException(nameof(yawTransform));
+            this.movementHandler = movementHandler ?? throw new ArgumentNullException(nameof(movementHandler));
+            this.playerHealth = playerHealth != null ? playerHealth : throw new ArgumentNullException(nameof(playerHealth));
         }
 
-        public async void HandleLanding(IGroundChecker groundChecker) //FIXME
+        public void ApplyLanding(PlayerCollisionController collision)
         {
-            if (!ShouldTriggerLanding(groundChecker)) return;
+            // Check for landing
+            if (collision.GroundChecker.IsGrounded && !collision.GroundChecker.WasGroundedLastFrame)
+                ApplyLanding(movementHandler.Velocity.y);
+            else if (!collision.GroundChecker.IsGrounded)
+                // Record potential impact speed while falling
+                RecordImpactSpeed(movementHandler.Velocity);
 
-            // Cancel any existing landing animation
-            landTokenSource?.Cancel();
-            landTokenSource?.Dispose();
-
-            await LandingAnimationAsync();
+            collision.GroundChecker.WasGroundedLastFrame = collision.GroundChecker.IsGrounded;
         }
 
-        bool ShouldTriggerLanding(IGroundChecker groundChecker)
-        => !groundChecker.IsPreviouslyGrounded &&
-            groundChecker.IsGrounded &&
-            gravityHandler.InAirTimer > settings.minAirTime;
-
-        async Awaitable LandingAnimationAsync()
+        void ApplyLanding(float fallSpeed)
         {
-            landTokenSource = new CancellationTokenSource();
-            var token = landTokenSource.Token;
+            // Use the stored impact speed
+            var calculatedFallSpeed = -Mathf.Min(fallSpeed, LatestImpactSpeed.y);
+            LatestImpactSpeed = Vector3.zero; // Reset after landing
 
-            try
+            OnLand.Invoke();
+
+            var fallSpeedRatio = Mathf.Clamp01(
+                (calculatedFallSpeed - settings.MinSpeedForFallDamage) /
+                (settings.MaxSpeedForFallDamage - settings.MinSpeedForFallDamage)
+            );
+
+            if (settings.ReceivesFallDamage && fallSpeedRatio > 0f)
             {
-                IsLanding = true;
-                LastLandImpact = CalculateLandImpact();
-
-                var percent = 0f;
-                var landAmount = GetLandAmount();
-                var speed = 1f / Mathf.Max(0.001f, settings.landDuration);
-
-                var initialPosition = yawTransform.localPosition;
-                var targetPosition = initialPosition;
-
-                while (percent < 1f)
-                {
-                    if (token.IsCancellationRequested)
-                        break;
-
-                    percent += Time.deltaTime * speed;
-                    var curveValue = settings.landCurve.Evaluate(Mathf.Clamp01(percent));
-
-                    targetPosition.y = initialPosition.y + (curveValue * landAmount);
-                    yawTransform.localPosition = targetPosition;
-
-                    await Awaitable.NextFrameAsync();
-                }
-
-                // Ensure final position is reset exactly
-                targetPosition.y = initialPosition.y;
-                yawTransform.localPosition = targetPosition;
+                var damage = Mathf.Lerp(settings.FallDamageAtMinSpeed, settings.FallDamageAtMaxSpeed, fallSpeedRatio);
+                playerHealth.OnFall.Invoke(damage);
+                //m_AudioSource.PlayOneShot(FallDamageSfx);
             }
-            finally
+            else if (calculatedFallSpeed > 2f) // Minimum speed for landing sound
             {
-                IsLanding = false;
-                landTokenSource?.Dispose();
-                landTokenSource = null;
+                //m_AudioSource.PlayOneShot(LandSfx);
             }
         }
 
-        float CalculateLandImpact() => Mathf.Clamp01(gravityHandler.InAirTimer / settings.maxAirTimeForImpact);
-
-        float GetLandAmount()
+        void RecordImpactSpeed(Vector3 velocity)
         {
-            var normalizedAirTime = Mathf.Clamp01(
-                (gravityHandler.InAirTimer - settings.landTimer) /
-                (settings.maxLandAirTime - settings.landTimer)
-            );
-
-            return Mathf.Lerp(
-                settings.lowLandAmount,
-                settings.highLandAmount,
-                normalizedAirTime
-            );
+            // Only record downward velocity
+            if (velocity.y < LatestImpactSpeed.y)
+                LatestImpactSpeed = velocity;
         }
-
-        public void CancelLanding() => landTokenSource?.Cancel();
     }
 }

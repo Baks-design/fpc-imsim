@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6f7b51ba9b8390d458bf962d674a4c0b, type: 3}
   m_Name: Rotation Settings
   m_EditorClassIdentifier: 
-  topClamp: 60
-  bottomClamp: -60
-  verticalSpeedRotation: 20
-  horizontalSpeedRotation: 20
+  topClampY: 60
+  bottomClampY: -60
+  speedRotationX: 40
+  speedRotationY: 40
+  decaySpeed: 16

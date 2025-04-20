@@ -1,16 +1,13 @@
-using Name;
+using Assets.root.Runtime.Collision;
 using UnityEngine;
-using static Assets.root.RunMovement.Handlers.MovementHandler;
 
 namespace Assets.root.Runtime.Movement.Interfaces
 {
     public interface IMovementHandler
     {
-        Vector3 FinalMove { get; }
-        float CurrentSpeed { get; }
-        public MovementState CurrentState { get; }
+        bool IsRunning { get; set; }
+        Vector3 Velocity { get; set; }
 
-        void HandleMovement(PlayerController input);
-        void ResetMovement();
+        void ApplyMove(PlayerCollisionController collision);
     }
 }

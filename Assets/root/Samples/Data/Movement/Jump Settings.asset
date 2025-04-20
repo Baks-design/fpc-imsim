@@ -12,7 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7e819fc889e8f74db1d5ba436a3b7a3, type: 3}
   m_Name: Jump Settings
   m_EditorClassIdentifier: 
-  jumpSpeed: 6
-  coyoteTime: 1
-  crouchJumpMultiplier: 1
-  jumpBufferTime: 1
+  JumpForce: 9

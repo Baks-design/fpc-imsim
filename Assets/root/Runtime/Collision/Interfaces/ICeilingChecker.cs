@@ -1,10 +1,9 @@
-namespace Assets.root.Runtime.Movement.Interfaces
+namespace Assets.root.Runtime.Collision.Interfaces
 {
     public interface ICeilChecker
     {
         bool IsHitCeil { get; }
 
-        void UpdateCeilCheck();
-        void DrawDebugGizmos();
+        bool UpdateCeilCheck();
     }
 }

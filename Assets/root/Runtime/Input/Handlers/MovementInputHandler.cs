@@ -1,4 +1,5 @@
 using Assets.root.Runtime.Input.Interfaces;
+using Assets.root.Runtime.Utilities.Helpers;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -22,10 +23,8 @@ namespace Assets.root.Runtime.Input.Handlers
         }
 
         public Vector2 Move() => moveAction.ReadValue<Vector2>();
-        public bool RunWasPressed() => runAction.WasPressedThisDynamicUpdate();
-        public bool RunIsPressed() => runAction.IsPressed();
-        public bool RunWasReleased() => runAction.WasReleasedThisDynamicUpdate();
-        public bool CrouchWasPressed() => crouchAction.WasPressedThisDynamicUpdate();
-        public bool JumpWasPressed() => jumpAction.WasPressedThisDynamicUpdate();
+        public InputAction Run() => runAction;
+        public InputAction Crouch() => crouchAction;
+        public InputAction Jump() => jumpAction;
     }
 }

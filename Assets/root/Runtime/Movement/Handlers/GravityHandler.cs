@@ -1,4 +1,5 @@
 using System;
+using Assets.root.Runtime.Collision;
 using Assets.root.Runtime.Movement.Interfaces;
 using Assets.root.Runtime.Movement.Settings;
 using UnityEngine;
@@ -7,40 +8,27 @@ namespace Assets.root.Runtime.Movement.Handlers
 {
     public class GravityHandler : IGravityHandler
     {
-        readonly MovementGravitySettings gravitySettings;
-        Vector3 finalMoveVector;
+        readonly MovementGravitySettings settings;
+        readonly IJumpHandler jumpHandler;
+        readonly IMovementHandler movementHandler;
+        const float k_JumpGroundingPreventionTime = 0.2f;
 
-        public Vector3 Gravity { get; private set; }
-        public float InAirTimer { get; private set; }
-
-        public GravityHandler(MovementGravitySettings gravitySettings)
-        => this.gravitySettings = gravitySettings != null ? gravitySettings : throw new ArgumentNullException(nameof(gravitySettings));
-
-        public void UpdateInAirTimer(IGroundChecker groundChecker)
-        => InAirTimer = groundChecker.IsGrounded ? 0f : InAirTimer + Time.deltaTime;
-
-        public void ApplyGravity(IGroundChecker groundChecker) //FIXME
+        public GravityHandler(
+            MovementGravitySettings settings,
+            IJumpHandler jumpHandler,
+            IMovementHandler movementHandler
+        )
         {
-            if (!groundChecker.IsGrounded)
-            {
-                // Apply gravity with multiplier
-                finalMoveVector += gravitySettings.gravityMultiplier * Time.deltaTime * Physics.gravity;
-
-                // Clamp maximum falling speed
-                finalMoveVector.y = Mathf.Max(finalMoveVector.y, -gravitySettings.maxFallSpeed);
-            }
-            else if (groundChecker.IsGrounded)
-                // Reset vertical movement but maintain small ground stick force
-                finalMoveVector.y = Mathf.Max(-gravitySettings.stickToGroundForce, finalMoveVector.y);
-
-            Gravity = finalMoveVector;
+            this.settings = settings != null ? settings : throw new ArgumentNullException(nameof(settings));
+            this.jumpHandler = jumpHandler ?? throw new ArgumentNullException(nameof(jumpHandler));
+            this.movementHandler = movementHandler ?? throw new ArgumentNullException(nameof(movementHandler));
         }
 
-        public void ResetGravity()
+        public void ApplyGravity(PlayerCollisionController collision)
         {
-            finalMoveVector = Vector3.zero;
-            Gravity = Vector3.zero;
-            InAirTimer = 0f;
+            // Apply gravity
+            if (!collision.GroundChecker.IsGrounded || Time.time < jumpHandler.LastTimeJumped + k_JumpGroundingPreventionTime)
+                movementHandler.Velocity += settings.GravityDownForce * Time.deltaTime * Vector3.down;
         }
     }
 }
